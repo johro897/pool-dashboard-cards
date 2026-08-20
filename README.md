@@ -99,9 +99,19 @@ Drag chips to the desired position → **💾 Save**.
 
 ## Changelog
 
-### v1.1
+### v1.3
 **Security hardening** — [#1](https://github.com/johro897/pool-dashboard-cards/issues/1)
 - Config values shown in both card editors (background image path, entity IDs) are now HTML-escaped before being rendered — previously a crafted value could break out of an HTML attribute or inject markup
+
+**Performance** — [#2](https://github.com/johro897/pool-dashboard-cards/issues/2)
+- Both cards now only re-render when a configured entity actually changes state, instead of on every Home Assistant state change anywhere in the install
+- If you don't configure `time`/`date` entities on `pool-picture-card`, the fallback clock display now updates only when another watched entity changes, rather than roughly every time any entity in your install changes
+
+**Accessibility & robustness** — [#3](https://github.com/johro897/pool-dashboard-cards/issues/3)
+- Chips can now be repositioned with arrow keys (Shift for a bigger step) while edit mode is active, not just by dragging with a mouse/touch
+- Each chip has an `aria-label`; the background picture is now marked decorative (`alt=""`)
+- Zero flow now shows in red on both cards, matching the existing warning-color pattern already used for circulation — no attempt at a low/ok/good scale for non-zero flow, since a sensible threshold depends on pump/pipe specs this card has no way to know
+- Saved position data (from config or `localStorage`) is now shape-validated before use — a corrupted or hand-edited value falls through to the next source instead of crashing or pushing chips off-screen
 
 ### v1.0.0
 - Initial release
