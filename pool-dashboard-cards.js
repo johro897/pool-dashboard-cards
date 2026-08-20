@@ -12,6 +12,15 @@
 
 const STORAGE_KEY = 'pool-picture-card-positions';
 
+function escHtml(str) {
+  if (str === undefined || str === null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 /* ═══════════════════════════════════════════════════════════════
    HUVUD-KORT
 ═══════════════════════════════════════════════════════════════ */
@@ -19,9 +28,24 @@ class PoolPictureCard extends HTMLElement {
 
   /* ── Lovelace hooks ─────────────────────────────────────────── */
   set hass(hass) {
+    const prevHass = this._hass;
     this._hass = hass;
-    if (!this._built) { this._build(); this._built = true; }
-    this._update();
+    if (!this._built) { this._build(); this._built = true; this._update(); return; }
+    if (this._isDirty(prevHass, hass)) this._update();
+  }
+
+  /** Entity IDs configured under `entities` — the only ones _update() reads. */
+  _watchedEntities() {
+    return Object.values(this._config?.entities || {}).filter(Boolean);
+  }
+
+  /** Relies on HA's guarantee that hass.states[id] keeps the same reference unless that entity actually changed. */
+  _isDirty(prevHass, hass) {
+    if (!prevHass) return true;
+    for (const id of this._watchedEntities()) {
+      if (prevHass.states?.[id] !== hass.states?.[id]) return true;
+    }
+    return false;
   }
 
   setConfig(config) {
@@ -79,14 +103,29 @@ class PoolPictureCard extends HTMLElement {
     };
   }
 
-  /* Läs positioner: config → localStorage → defaults */
+  /* Giltig form: ett vanligt objekt där varje post är { top: finit tal, left: finit tal }. */
+  _isValidPositions(pos) {
+    if (!pos || typeof pos !== 'object' || Array.isArray(pos)) return false;
+    return Object.values(pos).every(p =>
+      p && typeof p === 'object' && !Array.isArray(p) &&
+      Number.isFinite(p.top) && Number.isFinite(p.left)
+    );
+  }
+
+  /* Läs positioner: config → localStorage → defaults. Ett felformat värde
+     (t.ex. handredigerad YAML eller korrupt localStorage) faller igenom
+     till nästa källa istället för att krascha _applyPositions() eller
+     skjuta chips utanför synligt område. */
   _readPositions() {
-    if (this._config && this._config.positions) {
+    if (this._config && this._config.positions && this._isValidPositions(this._config.positions)) {
       return this._config.positions;
     }
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (this._isValidPositions(parsed)) return parsed;
+      }
     } catch(e) {}
     return this._defaults();
   }
@@ -182,6 +221,7 @@ class PoolPictureCard extends HTMLElement {
   .dot.off  { background:#555; }
   .cold { color: #64b5f6; }
   .warm { color: #ff8a65; }
+  .flow-zero { color: #ef5350; }
 
   /* ── Edit bar (top) ──────────────────────────────────────── */
   .edit-bar {
@@ -238,7 +278,7 @@ class PoolPictureCard extends HTMLElement {
 </style>
 
 <div class="root" id="root">
-  <img class="bg" id="bg" draggable="false"/>
+  <img class="bg" id="bg" draggable="false" alt=""/>
 
   <div class="grid-overlay" id="grid-overlay">
     <svg viewBox="0 0 100 56.25" preserveAspectRatio="none">
@@ -256,13 +296,13 @@ class PoolPictureCard extends HTMLElement {
   </div>
 
   <!-- Chips -->
-  <div class="chip" id="chip-clock" data-chip="clock">
+  <div class="chip" id="chip-clock" data-chip="clock" aria-label="Klocka — flytta med piltangenterna när redigering är aktiv">
     <div class="chip-id">Klocka</div>
     <div class="val" id="v-time">--:--</div>
     <div class="lbl" id="v-date">--- -- ---</div>
   </div>
 
-  <div class="chip" id="chip-airtemp" data-chip="airtemp">
+  <div class="chip" id="chip-airtemp" data-chip="airtemp" aria-label="Lufttemp — flytta med piltangenterna när redigering är aktiv">
     <div class="chip-id">Lufttemp</div>
     <div class="row">
       <span class="icon">🌤️</span>
@@ -273,13 +313,13 @@ class PoolPictureCard extends HTMLElement {
     </div>
   </div>
 
-  <div class="chip" id="chip-rpm" data-chip="rpm">
+  <div class="chip" id="chip-rpm" data-chip="rpm" aria-label="RPM — flytta med piltangenterna när redigering är aktiv">
     <div class="chip-id">RPM</div>
     <div class="val" id="v-rpm">---- RPM</div>
     <div class="lbl" id="v-rpmmode">---</div>
   </div>
 
-  <div class="chip" id="chip-flow" data-chip="flow">
+  <div class="chip" id="chip-flow" data-chip="flow" aria-label="Flöde — flytta med piltangenterna när redigering är aktiv">
     <div class="chip-id">Flöde</div>
     <div class="row">
       <span class="icon">💧</span>
@@ -290,7 +330,7 @@ class PoolPictureCard extends HTMLElement {
     </div>
   </div>
 
-  <div class="chip" id="chip-water" data-chip="water">
+  <div class="chip" id="chip-water" data-chip="water" aria-label="Vattentemp — flytta med piltangenterna när redigering är aktiv">
     <div class="chip-id">Vattentemp</div>
     <div class="row" style="gap:10px;">
       <div>
@@ -311,7 +351,7 @@ class PoolPictureCard extends HTMLElement {
     </div>
   </div>
 
-  <div class="chip" id="chip-hp" data-chip="hp">
+  <div class="chip" id="chip-hp" data-chip="hp" aria-label="Värmepump — flytta med piltangenterna när redigering är aktiv">
     <div class="chip-id">Värmepump</div>
     <div class="row">
       <span class="dot off" id="dot-hp"></span>
@@ -322,7 +362,7 @@ class PoolPictureCard extends HTMLElement {
     </div>
   </div>
 
-  <div class="chip" id="chip-energy" data-chip="energy">
+  <div class="chip" id="chip-energy" data-chip="energy" aria-label="Energi — flytta med piltangenterna när redigering är aktiv">
     <div class="chip-id">Energi</div>
     <div class="row" style="gap:12px;">
       <div>
@@ -385,7 +425,7 @@ class PoolPictureCard extends HTMLElement {
       editBar.classList.add('active');
       gridOvl.classList.add('active');
       toggleBtn.style.display = 'none';
-      chips.forEach(c => c.classList.add('editable'));
+      chips.forEach(c => { c.classList.add('editable'); c.tabIndex = 0; });
     };
 
     const exitEdit = (save) => {
@@ -393,7 +433,7 @@ class PoolPictureCard extends HTMLElement {
       editBar.classList.remove('active');
       gridOvl.classList.remove('active');
       toggleBtn.style.display = '';
-      chips.forEach(c => c.classList.remove('editable', 'dragging'));
+      chips.forEach(c => { c.classList.remove('editable', 'dragging'); c.tabIndex = -1; });
       dragging = null;
 
       if (save) {
@@ -464,6 +504,28 @@ class PoolPictureCard extends HTMLElement {
           dragging = null;
         }
       });
+
+      // Keyboard equivalent of dragging: arrow keys nudge the chip, Shift
+      // for a bigger step. Only active while edit mode is on (chip.tabIndex
+      // is 0 then, -1 otherwise, so this can't fire outside edit mode).
+      chip.addEventListener('keydown', (e) => {
+        if (!editMode) return;
+        const steps = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] };
+        const step = steps[e.key];
+        if (!step) return;
+        e.preventDefault();
+        const amount = e.shiftKey ? 5 : 1;
+        const rootRect = root.getBoundingClientRect();
+        const chipRect = chip.getBoundingClientRect();
+        const curLeft = ((chipRect.left - rootRect.left) / rootRect.width)  * 100;
+        const curTop  = ((chipRect.top  - rootRect.top)  / rootRect.height) * 100;
+        const newLeft = Math.max(0, Math.min(88, curLeft + step[0] * amount));
+        const newTop  = Math.max(0, Math.min(85, curTop  + step[1] * amount));
+        chip.style.left   = newLeft + '%';
+        chip.style.top    = newTop  + '%';
+        chip.style.right  = '';
+        chip.style.bottom = '';
+      });
     });
   }
 
@@ -506,6 +568,13 @@ class PoolPictureCard extends HTMLElement {
 
     const fl = s(e.flow);
     this._setText('v-flow', fl ? `${Math.round(parseFloat(fl)).toLocaleString('sv-SE')} L/h` : '-- L/h');
+    // Zero flow while there's a real reading likely means the pump isn't
+    // circulating — flag it, same idea as the circulation warning colors in
+    // pool-sensors-card. Not attempting a "low/ok/good" scale here since a
+    // sensible non-zero threshold depends on pump/pipe specs this card has
+    // no way to know.
+    const flowEl = this.shadowRoot.getElementById('v-flow');
+    if (flowEl) flowEl.classList.toggle('flow-zero', fl !== null && parseFloat(fl) === 0);
 
     this._setText('v-water-in',  s(e.water_in)  ? `${parseFloat(s(e.water_in)).toFixed(1)}°C`  : '--°C');
     this._setText('v-water-out', s(e.water_out) ? `${parseFloat(s(e.water_out)).toFixed(1)}°C` : '--°C');
@@ -616,7 +685,7 @@ class PoolPictureCardEditor extends HTMLElement {
     <div class="section-title">Bakgrundsbild</div>
     <div class="field">
       <label>Bildväg (URL)</label>
-      <input id="inp-image" type="text" value="${c.image || '/local/pool_v2.png'}" placeholder="/local/pool_v2.png"/>
+      <input id="inp-image" type="text" value="${escHtml(c.image || '/local/pool_v2.png')}" placeholder="/local/pool_v2.png"/>
     </div>
   </div>
 
@@ -626,51 +695,51 @@ class PoolPictureCardEditor extends HTMLElement {
     <div class="entity-grid">
       <div class="field">
         <label>🕐 Klocka</label>
-        <input data-ent="time" value="${e.time||''}" placeholder="sensor.time"/>
+        <input data-ent="time" value="${escHtml(e.time||'')}" placeholder="sensor.time"/>
       </div>
       <div class="field">
         <label>📅 Datum</label>
-        <input data-ent="date" value="${e.date||''}" placeholder="sensor.date"/>
+        <input data-ent="date" value="${escHtml(e.date||'')}" placeholder="sensor.date"/>
       </div>
       <div class="field">
         <label>🌤️ Lufttemp</label>
-        <input data-ent="air_temp" value="${e.air_temp||''}" placeholder="sensor..."/>
+        <input data-ent="air_temp" value="${escHtml(e.air_temp||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>💧 Vattentemp in</label>
-        <input data-ent="water_in" value="${e.water_in||''}" placeholder="sensor..."/>
+        <input data-ent="water_in" value="${escHtml(e.water_in||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>🌡️ Vattentemp ut</label>
-        <input data-ent="water_out" value="${e.water_out||''}" placeholder="sensor..."/>
+        <input data-ent="water_out" value="${escHtml(e.water_out||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>⚙️ Pump RPM</label>
-        <input data-ent="rpm" value="${e.rpm||''}" placeholder="sensor..."/>
+        <input data-ent="rpm" value="${escHtml(e.rpm||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>🔌 Pump på/av</label>
-        <input data-ent="pump_power" value="${e.pump_power||''}" placeholder="switch..."/>
+        <input data-ent="pump_power" value="${escHtml(e.pump_power||'')}" placeholder="switch..."/>
       </div>
       <div class="field">
         <label>🔄 Flöde</label>
-        <input data-ent="flow" value="${e.flow||''}" placeholder="sensor..."/>
+        <input data-ent="flow" value="${escHtml(e.flow||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>🔥 VP på/av</label>
-        <input data-ent="hp_power" value="${e.hp_power||''}" placeholder="binary_sensor..."/>
+        <input data-ent="hp_power" value="${escHtml(e.hp_power||'')}" placeholder="binary_sensor..."/>
       </div>
       <div class="field">
         <label>🎯 VP måltemp</label>
-        <input data-ent="hp_target" value="${e.hp_target||''}" placeholder="sensor..."/>
+        <input data-ent="hp_target" value="${escHtml(e.hp_target||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>📊 Energi idag</label>
-        <input data-ent="energy_today" value="${e.energy_today||''}" placeholder="sensor..."/>
+        <input data-ent="energy_today" value="${escHtml(e.energy_today||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>💡 Effekt (W)</label>
-        <input data-ent="watt" value="${e.watt||''}" placeholder="sensor..."/>
+        <input data-ent="watt" value="${escHtml(e.watt||'')}" placeholder="sensor..."/>
       </div>
     </div>
   </div>
@@ -772,9 +841,24 @@ window.customCards.push({
 class PoolSensorsCard extends HTMLElement {
 
   set hass(hass) {
+    const prevHass = this._hass;
     this._hass = hass;
-    if (!this._built) { this._build(); this._built = true; }
-    this._update();
+    if (!this._built) { this._build(); this._built = true; this._update(); return; }
+    if (this._isDirty(prevHass, hass)) this._update();
+  }
+
+  /** Entity IDs configured under `entities` — the only ones _update() reads. */
+  _watchedEntities() {
+    return Object.values(this._config?.entities || {}).filter(Boolean);
+  }
+
+  /** Relies on HA's guarantee that hass.states[id] keeps the same reference unless that entity actually changed. */
+  _isDirty(prevHass, hass) {
+    if (!prevHass) return true;
+    for (const id of this._watchedEntities()) {
+      if (prevHass.states?.[id] !== hass.states?.[id]) return true;
+    }
+    return false;
   }
 
   setConfig(config) {
@@ -922,7 +1006,7 @@ class PoolSensorsCard extends HTMLElement {
   <div class="row">
     <div class="icon-wrap ic-cyan">💧</div>
     <div class="name">Vattenflöde</div>
-    <div class="value v-cyan" id="v-flow">--<span class="unit">L/h</span></div>
+    <div class="value" id="v-flow">--<span class="unit">L/h</span></div>
   </div>
 
   <!-- Pump effekt -->
@@ -974,9 +1058,12 @@ class PoolSensorsCard extends HTMLElement {
     const wt = f(e.water_temp);
     this._setHTML('v-water-temp', wt ? `${wt}<span class="unit">°C</span>` : '--');
 
-    // Flöde
+    // Flöde — samma noll-flöde-varning som pool-picture-card; ingen
+    // låg/ok/bra-skala här eftersom en rimlig icke-noll-gräns beror på
+    // pump-/rörspecifikationer det här kortet inte känner till.
     const flow = f(e.flow, 0);
-    this._setHTML('v-flow', flow ? `${parseInt(flow).toLocaleString('sv-SE')}<span class="unit"> L/h</span>` : '--');
+    const flowColor = flow !== null && parseFloat(flow) === 0 ? 'v-red' : 'v-cyan';
+    this._setHTML('v-flow', flow ? `<span class="${flowColor}">${parseInt(flow).toLocaleString('sv-SE')}</span><span class="unit"> L/h</span>` : '--');
 
     // Pump watt
     const watt = f(e.pump_watt, 0);
@@ -1063,7 +1150,7 @@ class PoolSensorsCardEditor extends HTMLElement {
         ${fields.map(f => `
           <div class="field">
             <label>${f.label}</label>
-            <input data-key="${f.key}" value="${e[f.key]||''}" placeholder="entity_id"/>
+            <input data-key="${f.key}" value="${escHtml(e[f.key]||'')}" placeholder="entity_id"/>
           </div>`).join('')}
       </div>`;
 
