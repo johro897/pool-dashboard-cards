@@ -99,6 +99,13 @@ Drag chips to the desired position → **💾 Save**.
 
 ## Changelog
 
+### v1.3
+**Accessibility & robustness** — [#3](https://github.com/johro897/pool-dashboard-cards/issues/3)
+- Chips can now be repositioned with arrow keys (Shift for a bigger step) while edit mode is active, not just by dragging with a mouse/touch
+- Each chip has an `aria-label`; the background picture is now marked decorative (`alt=""`)
+- Zero flow now shows in red on both cards, matching the existing warning-color pattern already used for circulation — no attempt at a low/ok/good scale for non-zero flow, since a sensible threshold depends on pump/pipe specs this card has no way to know
+- Saved position data (from config or `localStorage`) is now shape-validated before use — a corrupted or hand-edited value falls through to the next source instead of crashing or pushing chips off-screen
+
 ### v1.0.0
 - Initial release
 - pool-picture-card with drag-to-position and visual editor
