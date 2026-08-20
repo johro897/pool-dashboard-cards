@@ -99,6 +99,10 @@ Drag chips to the desired position → **💾 Save**.
 
 ## Changelog
 
+### v1.1
+**Security hardening** — [#1](https://github.com/johro897/pool-dashboard-cards/issues/1)
+- Config values shown in both card editors (background image path, entity IDs) are now HTML-escaped before being rendered — previously a crafted value could break out of an HTML attribute or inject markup
+
 ### v1.0.0
 - Initial release
 - pool-picture-card with drag-to-position and visual editor
