@@ -99,6 +99,11 @@ Drag chips to the desired position → **💾 Save**.
 
 ## Changelog
 
+### v1.2
+**Performance** — [#2](https://github.com/johro897/pool-dashboard-cards/issues/2)
+- Both cards now only re-render when a configured entity actually changes state, instead of on every Home Assistant state change anywhere in the install
+- If you don't configure `time`/`date` entities on `pool-picture-card`, the fallback clock display now updates only when another watched entity changes, rather than roughly every time any entity in your install changes
+
 ### v1.0.0
 - Initial release
 - pool-picture-card with drag-to-position and visual editor

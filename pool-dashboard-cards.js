@@ -19,9 +19,24 @@ class PoolPictureCard extends HTMLElement {
 
   /* ── Lovelace hooks ─────────────────────────────────────────── */
   set hass(hass) {
+    const prevHass = this._hass;
     this._hass = hass;
-    if (!this._built) { this._build(); this._built = true; }
-    this._update();
+    if (!this._built) { this._build(); this._built = true; this._update(); return; }
+    if (this._isDirty(prevHass, hass)) this._update();
+  }
+
+  /** Entity IDs configured under `entities` — the only ones _update() reads. */
+  _watchedEntities() {
+    return Object.values(this._config?.entities || {}).filter(Boolean);
+  }
+
+  /** Relies on HA's guarantee that hass.states[id] keeps the same reference unless that entity actually changed. */
+  _isDirty(prevHass, hass) {
+    if (!prevHass) return true;
+    for (const id of this._watchedEntities()) {
+      if (prevHass.states?.[id] !== hass.states?.[id]) return true;
+    }
+    return false;
   }
 
   setConfig(config) {
@@ -772,9 +787,24 @@ window.customCards.push({
 class PoolSensorsCard extends HTMLElement {
 
   set hass(hass) {
+    const prevHass = this._hass;
     this._hass = hass;
-    if (!this._built) { this._build(); this._built = true; }
-    this._update();
+    if (!this._built) { this._build(); this._built = true; this._update(); return; }
+    if (this._isDirty(prevHass, hass)) this._update();
+  }
+
+  /** Entity IDs configured under `entities` — the only ones _update() reads. */
+  _watchedEntities() {
+    return Object.values(this._config?.entities || {}).filter(Boolean);
+  }
+
+  /** Relies on HA's guarantee that hass.states[id] keeps the same reference unless that entity actually changed. */
+  _isDirty(prevHass, hass) {
+    if (!prevHass) return true;
+    for (const id of this._watchedEntities()) {
+      if (prevHass.states?.[id] !== hass.states?.[id]) return true;
+    }
+    return false;
   }
 
   setConfig(config) {
