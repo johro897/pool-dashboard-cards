@@ -12,6 +12,15 @@
 
 const STORAGE_KEY = 'pool-picture-card-positions';
 
+function escHtml(str) {
+  if (str === undefined || str === null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 /* ═══════════════════════════════════════════════════════════════
    HUVUD-KORT
 ═══════════════════════════════════════════════════════════════ */
@@ -616,7 +625,7 @@ class PoolPictureCardEditor extends HTMLElement {
     <div class="section-title">Bakgrundsbild</div>
     <div class="field">
       <label>Bildväg (URL)</label>
-      <input id="inp-image" type="text" value="${c.image || '/local/pool_v2.png'}" placeholder="/local/pool_v2.png"/>
+      <input id="inp-image" type="text" value="${escHtml(c.image || '/local/pool_v2.png')}" placeholder="/local/pool_v2.png"/>
     </div>
   </div>
 
@@ -626,51 +635,51 @@ class PoolPictureCardEditor extends HTMLElement {
     <div class="entity-grid">
       <div class="field">
         <label>🕐 Klocka</label>
-        <input data-ent="time" value="${e.time||''}" placeholder="sensor.time"/>
+        <input data-ent="time" value="${escHtml(e.time||'')}" placeholder="sensor.time"/>
       </div>
       <div class="field">
         <label>📅 Datum</label>
-        <input data-ent="date" value="${e.date||''}" placeholder="sensor.date"/>
+        <input data-ent="date" value="${escHtml(e.date||'')}" placeholder="sensor.date"/>
       </div>
       <div class="field">
         <label>🌤️ Lufttemp</label>
-        <input data-ent="air_temp" value="${e.air_temp||''}" placeholder="sensor..."/>
+        <input data-ent="air_temp" value="${escHtml(e.air_temp||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>💧 Vattentemp in</label>
-        <input data-ent="water_in" value="${e.water_in||''}" placeholder="sensor..."/>
+        <input data-ent="water_in" value="${escHtml(e.water_in||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>🌡️ Vattentemp ut</label>
-        <input data-ent="water_out" value="${e.water_out||''}" placeholder="sensor..."/>
+        <input data-ent="water_out" value="${escHtml(e.water_out||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>⚙️ Pump RPM</label>
-        <input data-ent="rpm" value="${e.rpm||''}" placeholder="sensor..."/>
+        <input data-ent="rpm" value="${escHtml(e.rpm||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>🔌 Pump på/av</label>
-        <input data-ent="pump_power" value="${e.pump_power||''}" placeholder="switch..."/>
+        <input data-ent="pump_power" value="${escHtml(e.pump_power||'')}" placeholder="switch..."/>
       </div>
       <div class="field">
         <label>🔄 Flöde</label>
-        <input data-ent="flow" value="${e.flow||''}" placeholder="sensor..."/>
+        <input data-ent="flow" value="${escHtml(e.flow||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>🔥 VP på/av</label>
-        <input data-ent="hp_power" value="${e.hp_power||''}" placeholder="binary_sensor..."/>
+        <input data-ent="hp_power" value="${escHtml(e.hp_power||'')}" placeholder="binary_sensor..."/>
       </div>
       <div class="field">
         <label>🎯 VP måltemp</label>
-        <input data-ent="hp_target" value="${e.hp_target||''}" placeholder="sensor..."/>
+        <input data-ent="hp_target" value="${escHtml(e.hp_target||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>📊 Energi idag</label>
-        <input data-ent="energy_today" value="${e.energy_today||''}" placeholder="sensor..."/>
+        <input data-ent="energy_today" value="${escHtml(e.energy_today||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
         <label>💡 Effekt (W)</label>
-        <input data-ent="watt" value="${e.watt||''}" placeholder="sensor..."/>
+        <input data-ent="watt" value="${escHtml(e.watt||'')}" placeholder="sensor..."/>
       </div>
     </div>
   </div>
@@ -1063,7 +1072,7 @@ class PoolSensorsCardEditor extends HTMLElement {
         ${fields.map(f => `
           <div class="field">
             <label>${f.label}</label>
-            <input data-key="${f.key}" value="${e[f.key]||''}" placeholder="entity_id"/>
+            <input data-key="${f.key}" value="${escHtml(e[f.key]||'')}" placeholder="entity_id"/>
           </div>`).join('')}
       </div>`;
 
