@@ -99,6 +99,8 @@ entities:
 Press the **✏️** button (bottom right of the card) to enter edit mode.  
 Drag chips to the desired position → **💾 Save**.
 
+![Edit Mode Preview](/screenshots/move_chip.png)
+
 ---
 
 ### pool-sensors-card
