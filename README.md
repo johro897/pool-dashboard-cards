@@ -24,6 +24,8 @@ Background image with draggable glassmorphism chips displaying live pool data.
 ### `pool-sensors-card`
 Compact list-style card showing key pool readings with icons and color-coded values.
 
+![Pool Sensors Card Preview](/screenshots/sensors_card.png)
+
 **Features:**
 - Water temperature, flow rate, pump power draw, today's energy use, heat pump on/off status, and daily circulation count
 - Optional COP (coefficient of performance) row — only shown when a `cop` entity is configured
