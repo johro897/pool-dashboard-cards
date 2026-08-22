@@ -21,6 +21,17 @@ Background image with draggable glassmorphism chips displaying live pool data.
 - Mouse and touch support
 - Scales with `cqw` units (works on all screen sizes)
 
+### `pool-sensors-card`
+Compact list-style card showing key pool readings with icons and color-coded values.
+
+![Pool Sensors Card Preview](/screenshots/sensors_card.png)
+
+**Features:**
+- Water temperature, flow rate, pump power draw, today's energy use, heat pump on/off status, and daily circulation count
+- Optional COP (coefficient of performance) row — only shown when a `cop` entity is configured
+- Color-coded thresholds: flow turns red at zero, circulation is red/yellow/green by count, COP is red/yellow/green by value
+- Visual editor for mapping entities
+
 ---
 
 ## Installation via HACS
@@ -88,6 +99,34 @@ entities:
 Press the **✏️** button (bottom right of the card) to enter edit mode.  
 Drag chips to the desired position → **💾 Save**.
 
+![Edit Mode Preview](/screenshots/move_chip.png)
+
+---
+
+### pool-sensors-card
+
+```yaml
+type: custom:pool-sensors-card
+entities:
+  water_temp:   sensor.poolvarme_inlet_water_temp_t02
+  flow:         sensor.pool_flode_aktuellt
+  pump_watt:    sensor.poolpump_energi_template
+  energy_today: sensor.pool_pumpen_energy_2_daily
+  hp_power:     binary_sensor.poolvarme_power
+  circulation:  sensor.pool_cirkulation_per_dygn
+  cop:          sensor.pool_heat_pump_cop   # optional
+```
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `entities.water_temp` | entity_id | Water temperature (inlet) |
+| `entities.flow` | entity_id | Water flow rate (L/h) — turns red at zero |
+| `entities.pump_watt` | entity_id | Pump power draw (W) |
+| `entities.energy_today` | entity_id | Energy used today (kWh) |
+| `entities.hp_power` | entity_id | Heat pump on/off (binary_sensor) |
+| `entities.circulation` | entity_id | Circulation count per day — red below 1.5, yellow below 3, green at 3+ |
+| `entities.cop` | entity_id | *(optional)* Heat pump COP — the whole row is hidden if not configured |
+
 ---
 
 ## Requirements
@@ -98,6 +137,12 @@ Drag chips to the desired position → **💾 Save**.
 ---
 
 ## Changelog
+
+### v1.4
+**Documentation & language support** — [#8](https://github.com/johro897/pool-dashboard-cards/issues/8)
+- `pool-sensors-card` is now documented in this README — it was previously missing entirely, YAML-only with no options table
+- Both cards (and both visual editors) now auto-translate based on your Home Assistant instance's configured language — English (default) or Swedish, falling back to English for any other language. Previously all UI text was hardcoded in Swedish regardless of your HA language setting
+- Number/date formatting (RPM, flow rate, clock fallback) also follows your HA language instead of always using Swedish formatting
 
 ### v1.3
 **Security hardening** — [#1](https://github.com/johro897/pool-dashboard-cards/issues/1)
