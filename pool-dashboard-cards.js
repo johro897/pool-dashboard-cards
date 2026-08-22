@@ -22,6 +22,156 @@ function escHtml(str) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   TRANSLATIONS — bundled inline (not fetched) since HACS's "plugin"
+   category only distributes the single file named in hacs.json.
+═══════════════════════════════════════════════════════════════ */
+const DEFAULT_LANG = 'en';
+const TRANSLATIONS = {
+  en: {
+    edit_hint: 'Drag the chips — positions are saved in the configuration',
+    cancel: 'Cancel',
+    save: 'Save',
+    edit_positions: 'Edit positions',
+    chip_clock: 'Clock',
+    chip_airtemp: 'Air temp',
+    chip_rpm: 'RPM',
+    chip_flow: 'Flow',
+    chip_water: 'Water temp',
+    chip_hp: 'Heat pump',
+    chip_energy: 'Energy',
+    chip_aria: '{name} — move with arrow keys while editing is active',
+    inlet: 'Inlet',
+    outlet: 'Outlet',
+    now: 'Now',
+    today: 'Today',
+    target: 'Target',
+    mode_manual: 'Manual',
+    mode_eco: 'Eco mode',
+    mode_normal: 'Normal mode',
+    mode_max: 'Max mode',
+    mode_pump_off: 'Pump off',
+    heating: 'Heating',
+    standby: 'Standby',
+    background_image: 'Background image',
+    image_path: 'Image path (URL)',
+    entities: 'Entities',
+    ent_clock: 'Clock',
+    ent_date: 'Date',
+    ent_airtemp: 'Air temp',
+    ent_water_in: 'Water temp in',
+    ent_water_out: 'Water temp out',
+    ent_rpm: 'Pump RPM',
+    ent_pump_power: 'Pump on/off',
+    ent_flow: 'Flow',
+    ent_hp_power: 'Heat pump on/off',
+    ent_hp_target: 'Heat pump target temp',
+    ent_energy_today: 'Energy today',
+    ent_watt: 'Power (W)',
+    chip_positions: 'Chip positions',
+    pos_hint: 'Press the ✏️ button directly on the card preview above to drag the chips into place, then save.',
+    reset_positions: 'Reset default positions',
+    sensors: 'Sensors',
+    water_temp: 'Water temperature',
+    water_flow: 'Water flow',
+    pump_power: 'Pump power',
+    energy_today: 'Energy today',
+    heat_pump: 'Heat pump',
+    heat_pump_cop: 'Heat pump COP',
+    circulation: 'Circulation / day',
+    unit_times: 'x',
+    ed_water_temp: 'Water temp inlet',
+    ed_flow: 'Flow (L/h)',
+    ed_pump_watt: 'Pump power (W)',
+    ed_energy_today: 'Energy today (kWh)',
+    ed_hp_power: 'Heat pump on/off',
+    ed_cop: 'COP sensor (optional)',
+    ed_circulation: 'Circulation/day',
+  },
+  sv: {
+    edit_hint: 'Dra chipsen — positioner sparas i konfigurationen',
+    cancel: 'Avbryt',
+    save: 'Spara',
+    edit_positions: 'Redigera positioner',
+    chip_clock: 'Klocka',
+    chip_airtemp: 'Lufttemp',
+    chip_rpm: 'RPM',
+    chip_flow: 'Flöde',
+    chip_water: 'Vattentemp',
+    chip_hp: 'Värmepump',
+    chip_energy: 'Energi',
+    chip_aria: '{name} — flytta med piltangenterna när redigering är aktiv',
+    inlet: 'Inlopp',
+    outlet: 'Utlopp',
+    now: 'Nu',
+    today: 'Idag',
+    target: 'Mål',
+    mode_manual: 'Manuellt',
+    mode_eco: 'Eco-läge',
+    mode_normal: 'Normal-läge',
+    mode_max: 'Max-läge',
+    mode_pump_off: 'Pump av',
+    heating: 'Värmer',
+    standby: 'Standby',
+    background_image: 'Bakgrundsbild',
+    image_path: 'Bildväg (URL)',
+    entities: 'Entiteter',
+    ent_clock: 'Klocka',
+    ent_date: 'Datum',
+    ent_airtemp: 'Lufttemp',
+    ent_water_in: 'Vattentemp in',
+    ent_water_out: 'Vattentemp ut',
+    ent_rpm: 'Pump RPM',
+    ent_pump_power: 'Pump på/av',
+    ent_flow: 'Flöde',
+    ent_hp_power: 'VP på/av',
+    ent_hp_target: 'VP måltemp',
+    ent_energy_today: 'Energi idag',
+    ent_watt: 'Effekt (W)',
+    chip_positions: 'Chippositioner',
+    pos_hint: 'Tryck på ✏️-knappen direkt på kortförhandsvisningen ovan för att dra chipsen till önskad plats och sedan spara.',
+    reset_positions: 'Återställ standardpositioner',
+    sensors: 'Sensorer',
+    water_temp: 'Vattentemperatur',
+    water_flow: 'Vattenflöde',
+    pump_power: 'Pump effekt',
+    energy_today: 'Energi idag',
+    heat_pump: 'Värmepump',
+    heat_pump_cop: 'Värmepump COP',
+    circulation: 'Cirkulation / dygn',
+    unit_times: 'ggr',
+    ed_water_temp: 'Vattentemp inlopp',
+    ed_flow: 'Flöde (L/h)',
+    ed_pump_watt: 'Pump effekt (W)',
+    ed_energy_today: 'Energi idag (kWh)',
+    ed_hp_power: 'Värmepump på/av',
+    ed_cop: 'COP-sensor (valfri)',
+    ed_circulation: 'Cirkulation/dygn',
+  },
+};
+
+/** Resolves the language to format dates/numbers with — HA-configured language, falling back to the browser default. */
+function locale(hass) {
+  return hass?.locale?.language || hass?.language || undefined;
+}
+
+/** Resolves the HA-configured language to one of our translated languages, falling back to English. */
+function lang(hass) {
+  const raw = (hass?.locale?.language || hass?.language || DEFAULT_LANG).toLowerCase();
+  const primary = raw.split('-')[0];
+  return TRANSLATIONS[primary] ? primary : DEFAULT_LANG;
+}
+
+/** Looks up a UI string in the current language, with {placeholder} substitution. */
+function t(hass, key, replacements) {
+  const dict = TRANSLATIONS[lang(hass)] || TRANSLATIONS[DEFAULT_LANG];
+  const raw = dict[key] ?? TRANSLATIONS[DEFAULT_LANG][key] ?? key;
+  if (!replacements) return raw;
+  return raw.replace(/\{([^}]+)\}/g, (m, k) =>
+    Object.prototype.hasOwnProperty.call(replacements, k) ? replacements[k] : m
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
    HUVUD-KORT
 ═══════════════════════════════════════════════════════════════ */
 class PoolPictureCard extends HTMLElement {
@@ -288,57 +438,57 @@ class PoolPictureCard extends HTMLElement {
   </div>
 
   <div class="edit-bar" id="edit-bar">
-    <span>✏️ Dra chipsen — positioner sparas i konfigurationen</span>
+    <span>✏️ ${t(this._hass, 'edit_hint')}</span>
     <div style="display:flex;gap:8px;">
-      <button class="btn btn-cancel" id="btn-cancel">Avbryt</button>
-      <button class="btn btn-save"   id="btn-save">💾 Spara</button>
+      <button class="btn btn-cancel" id="btn-cancel">${t(this._hass, 'cancel')}</button>
+      <button class="btn btn-save"   id="btn-save">💾 ${t(this._hass, 'save')}</button>
     </div>
   </div>
 
   <!-- Chips -->
-  <div class="chip" id="chip-clock" data-chip="clock" aria-label="Klocka — flytta med piltangenterna när redigering är aktiv">
-    <div class="chip-id">Klocka</div>
+  <div class="chip" id="chip-clock" data-chip="clock" aria-label="${escHtml(t(this._hass, 'chip_aria', { name: t(this._hass, 'chip_clock') }))}">
+    <div class="chip-id">${t(this._hass, 'chip_clock')}</div>
     <div class="val" id="v-time">--:--</div>
     <div class="lbl" id="v-date">--- -- ---</div>
   </div>
 
-  <div class="chip" id="chip-airtemp" data-chip="airtemp" aria-label="Lufttemp — flytta med piltangenterna när redigering är aktiv">
-    <div class="chip-id">Lufttemp</div>
+  <div class="chip" id="chip-airtemp" data-chip="airtemp" aria-label="${escHtml(t(this._hass, 'chip_aria', { name: t(this._hass, 'chip_airtemp') }))}">
+    <div class="chip-id">${t(this._hass, 'chip_airtemp')}</div>
     <div class="row">
       <span class="icon">🌤️</span>
       <div>
         <div class="val" id="v-airtemp">--°C</div>
-        <div class="lbl">Lufttemp</div>
+        <div class="lbl">${t(this._hass, 'chip_airtemp')}</div>
       </div>
     </div>
   </div>
 
-  <div class="chip" id="chip-rpm" data-chip="rpm" aria-label="RPM — flytta med piltangenterna när redigering är aktiv">
-    <div class="chip-id">RPM</div>
+  <div class="chip" id="chip-rpm" data-chip="rpm" aria-label="${escHtml(t(this._hass, 'chip_aria', { name: t(this._hass, 'chip_rpm') }))}">
+    <div class="chip-id">${t(this._hass, 'chip_rpm')}</div>
     <div class="val" id="v-rpm">---- RPM</div>
     <div class="lbl" id="v-rpmmode">---</div>
   </div>
 
-  <div class="chip" id="chip-flow" data-chip="flow" aria-label="Flöde — flytta med piltangenterna när redigering är aktiv">
-    <div class="chip-id">Flöde</div>
+  <div class="chip" id="chip-flow" data-chip="flow" aria-label="${escHtml(t(this._hass, 'chip_aria', { name: t(this._hass, 'chip_flow') }))}">
+    <div class="chip-id">${t(this._hass, 'chip_flow')}</div>
     <div class="row">
       <span class="icon">💧</span>
       <div>
         <div class="val" id="v-flow">---- L/h</div>
-        <div class="lbl">Flöde</div>
+        <div class="lbl">${t(this._hass, 'chip_flow')}</div>
       </div>
     </div>
   </div>
 
-  <div class="chip" id="chip-water" data-chip="water" aria-label="Vattentemp — flytta med piltangenterna när redigering är aktiv">
-    <div class="chip-id">Vattentemp</div>
+  <div class="chip" id="chip-water" data-chip="water" aria-label="${escHtml(t(this._hass, 'chip_aria', { name: t(this._hass, 'chip_water') }))}">
+    <div class="chip-id">${t(this._hass, 'chip_water')}</div>
     <div class="row" style="gap:10px;">
       <div>
         <div class="row">
           <span style="color:#64b5f6;font-size:max(10px,1.1cqw);">↓</span>
           <span class="val cold" id="v-water-in">--°C</span>
         </div>
-        <div class="lbl">Inlopp</div>
+        <div class="lbl">${t(this._hass, 'inlet')}</div>
       </div>
       <div style="width:1px;background:rgba(255,255,255,0.2);align-self:stretch;"></div>
       <div>
@@ -346,38 +496,38 @@ class PoolPictureCard extends HTMLElement {
           <span style="color:#ff8a65;font-size:max(10px,1.1cqw);">↑</span>
           <span class="val warm" id="v-water-out">--°C</span>
         </div>
-        <div class="lbl">Utlopp</div>
+        <div class="lbl">${t(this._hass, 'outlet')}</div>
       </div>
     </div>
   </div>
 
-  <div class="chip" id="chip-hp" data-chip="hp" aria-label="Värmepump — flytta med piltangenterna när redigering är aktiv">
-    <div class="chip-id">Värmepump</div>
+  <div class="chip" id="chip-hp" data-chip="hp" aria-label="${escHtml(t(this._hass, 'chip_aria', { name: t(this._hass, 'chip_hp') }))}">
+    <div class="chip-id">${t(this._hass, 'chip_hp')}</div>
     <div class="row">
       <span class="dot off" id="dot-hp"></span>
       <div>
         <div class="val" id="v-hp-status">--</div>
-        <div class="lbl" id="v-hp-target">Mål: --°C</div>
+        <div class="lbl" id="v-hp-target">${t(this._hass, 'target')}: --°C</div>
       </div>
     </div>
   </div>
 
-  <div class="chip" id="chip-energy" data-chip="energy" aria-label="Energi — flytta med piltangenterna när redigering är aktiv">
-    <div class="chip-id">Energi</div>
+  <div class="chip" id="chip-energy" data-chip="energy" aria-label="${escHtml(t(this._hass, 'chip_aria', { name: t(this._hass, 'chip_energy') }))}">
+    <div class="chip-id">${t(this._hass, 'chip_energy')}</div>
     <div class="row" style="gap:12px;">
       <div>
         <div class="val" id="v-watt">-- W</div>
-        <div class="lbl">Nu</div>
+        <div class="lbl">${t(this._hass, 'now')}</div>
       </div>
       <div style="width:1px;background:rgba(255,255,255,0.2);align-self:stretch;"></div>
       <div>
         <div class="val" id="v-energy-today">-- kWh</div>
-        <div class="lbl">Idag</div>
+        <div class="lbl">${t(this._hass, 'today')}</div>
       </div>
     </div>
   </div>
 
-  <div class="edit-toggle" id="edit-toggle" title="Redigera positioner">✏️</div>
+  <div class="edit-toggle" id="edit-toggle" title="${escHtml(t(this._hass, 'edit_positions'))}">✏️</div>
 </div>`;
 
     const img = this.shadowRoot.getElementById('bg');
@@ -552,22 +702,22 @@ class PoolPictureCard extends HTMLElement {
     const e = this._config.entities || {};
     const s = id => { if (!id) return null; const st = h.states[id]; return st ? st.state : null; };
 
-    this._setText('v-time', s(e.time) || new Date().toLocaleTimeString('sv-SE',{hour:'2-digit',minute:'2-digit'}));
-    this._setText('v-date', s(e.date) || new Date().toLocaleDateString('sv-SE',{weekday:'short',day:'numeric',month:'short'}));
+    this._setText('v-time', s(e.time) || new Date().toLocaleTimeString(locale(h),{hour:'2-digit',minute:'2-digit'}));
+    this._setText('v-date', s(e.date) || new Date().toLocaleDateString(locale(h),{weekday:'short',day:'numeric',month:'short'}));
 
     const at = s(e.air_temp);
     this._setText('v-airtemp', at ? `${parseFloat(at).toFixed(1)}°C` : '--°C');
 
     const rpm = s(e.rpm);
     const rpmN = rpm ? Math.round(parseFloat(rpm)) : null;
-    this._setText('v-rpm', rpmN ? `${rpmN.toLocaleString('sv-SE')} RPM` : '-- RPM');
-    let mode = 'Manuellt';
-    if (rpmN) { mode = rpmN<=1350 ? 'Eco-läge' : rpmN<=1900 ? 'Normal-läge' : 'Max-läge'; }
-    if (s(e.pump_power) === 'off') mode = 'Pump av';
+    this._setText('v-rpm', rpmN ? `${rpmN.toLocaleString(locale(h))} RPM` : '-- RPM');
+    let mode = t(h, 'mode_manual');
+    if (rpmN) { mode = rpmN<=1350 ? t(h, 'mode_eco') : rpmN<=1900 ? t(h, 'mode_normal') : t(h, 'mode_max'); }
+    if (s(e.pump_power) === 'off') mode = t(h, 'mode_pump_off');
     this._setText('v-rpmmode', mode);
 
     const fl = s(e.flow);
-    this._setText('v-flow', fl ? `${Math.round(parseFloat(fl)).toLocaleString('sv-SE')} L/h` : '-- L/h');
+    this._setText('v-flow', fl ? `${Math.round(parseFloat(fl)).toLocaleString(locale(h))} L/h` : '-- L/h');
     // Zero flow while there's a real reading likely means the pump isn't
     // circulating — flag it, same idea as the circulation warning colors in
     // pool-sensors-card. Not attempting a "low/ok/good" scale here since a
@@ -580,8 +730,8 @@ class PoolPictureCard extends HTMLElement {
     this._setText('v-water-out', s(e.water_out) ? `${parseFloat(s(e.water_out)).toFixed(1)}°C` : '--°C');
 
     const hpOn = s(e.hp_power) === 'on';
-    this._setText('v-hp-status', hpOn ? 'Värmer' : 'Standby');
-    this._setText('v-hp-target', s(e.hp_target) ? `Mål: ${parseFloat(s(e.hp_target)).toFixed(1)}°C` : 'Mål: --°C');
+    this._setText('v-hp-status', hpOn ? t(h, 'heating') : t(h, 'standby'));
+    this._setText('v-hp-target', s(e.hp_target) ? `${t(h, 'target')}: ${parseFloat(s(e.hp_target)).toFixed(1)}°C` : `${t(h, 'target')}: --°C`);
     const dot = this.shadowRoot.getElementById('dot-hp');
     if (dot) dot.className = 'dot ' + (hpOn ? 'heat' : 'off');
 
@@ -682,63 +832,63 @@ class PoolPictureCardEditor extends HTMLElement {
 
   <!-- Bild -->
   <div class="section">
-    <div class="section-title">Bakgrundsbild</div>
+    <div class="section-title">${t(this._hass, 'background_image')}</div>
     <div class="field">
-      <label>Bildväg (URL)</label>
+      <label>${t(this._hass, 'image_path')}</label>
       <input id="inp-image" type="text" value="${escHtml(c.image || '/local/pool_v2.png')}" placeholder="/local/pool_v2.png"/>
     </div>
   </div>
 
   <!-- Entiteter -->
   <div class="section">
-    <div class="section-title">Entiteter</div>
+    <div class="section-title">${t(this._hass, 'entities')}</div>
     <div class="entity-grid">
       <div class="field">
-        <label>🕐 Klocka</label>
+        <label>🕐 ${t(this._hass, 'ent_clock')}</label>
         <input data-ent="time" value="${escHtml(e.time||'')}" placeholder="sensor.time"/>
       </div>
       <div class="field">
-        <label>📅 Datum</label>
+        <label>📅 ${t(this._hass, 'ent_date')}</label>
         <input data-ent="date" value="${escHtml(e.date||'')}" placeholder="sensor.date"/>
       </div>
       <div class="field">
-        <label>🌤️ Lufttemp</label>
+        <label>🌤️ ${t(this._hass, 'ent_airtemp')}</label>
         <input data-ent="air_temp" value="${escHtml(e.air_temp||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
-        <label>💧 Vattentemp in</label>
+        <label>💧 ${t(this._hass, 'ent_water_in')}</label>
         <input data-ent="water_in" value="${escHtml(e.water_in||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
-        <label>🌡️ Vattentemp ut</label>
+        <label>🌡️ ${t(this._hass, 'ent_water_out')}</label>
         <input data-ent="water_out" value="${escHtml(e.water_out||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
-        <label>⚙️ Pump RPM</label>
+        <label>⚙️ ${t(this._hass, 'ent_rpm')}</label>
         <input data-ent="rpm" value="${escHtml(e.rpm||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
-        <label>🔌 Pump på/av</label>
+        <label>🔌 ${t(this._hass, 'ent_pump_power')}</label>
         <input data-ent="pump_power" value="${escHtml(e.pump_power||'')}" placeholder="switch..."/>
       </div>
       <div class="field">
-        <label>🔄 Flöde</label>
+        <label>🔄 ${t(this._hass, 'ent_flow')}</label>
         <input data-ent="flow" value="${escHtml(e.flow||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
-        <label>🔥 VP på/av</label>
+        <label>🔥 ${t(this._hass, 'ent_hp_power')}</label>
         <input data-ent="hp_power" value="${escHtml(e.hp_power||'')}" placeholder="binary_sensor..."/>
       </div>
       <div class="field">
-        <label>🎯 VP måltemp</label>
+        <label>🎯 ${t(this._hass, 'ent_hp_target')}</label>
         <input data-ent="hp_target" value="${escHtml(e.hp_target||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
-        <label>📊 Energi idag</label>
+        <label>📊 ${t(this._hass, 'ent_energy_today')}</label>
         <input data-ent="energy_today" value="${escHtml(e.energy_today||'')}" placeholder="sensor..."/>
       </div>
       <div class="field">
-        <label>💡 Effekt (W)</label>
+        <label>💡 ${t(this._hass, 'ent_watt')}</label>
         <input data-ent="watt" value="${escHtml(e.watt||'')}" placeholder="sensor..."/>
       </div>
     </div>
@@ -746,12 +896,9 @@ class PoolPictureCardEditor extends HTMLElement {
 
   <!-- Positioner -->
   <div class="section">
-    <div class="section-title">Chippositioner</div>
-    <p class="pos-hint">
-      Tryck på <strong>✏️</strong>-knappen direkt på kortförhandsvisningen ovan
-      för att dra chipsen till önskad plats och sedan spara.
-    </p>
-    <button class="reset-btn" id="btn-reset">🔄 Återställ standardpositioner</button>
+    <div class="section-title">${t(this._hass, 'chip_positions')}</div>
+    <p class="pos-hint">${t(this._hass, 'pos_hint')}</p>
+    <button class="reset-btn" id="btn-reset">🔄 ${t(this._hass, 'reset_positions')}</button>
   </div>
 
 </div>`;
@@ -816,7 +963,7 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: 'pool-picture-card',
   name: 'Pool Picture Card',
-  description: 'Glassmorfism overlay med drag-to-position och live editor',
+  description: 'Background image with drag-to-position glassmorphism chips and a live editor',
   preview: true,
 });
 /**
@@ -993,55 +1140,55 @@ class PoolSensorsCard extends HTMLElement {
 </style>
 
 <div class="card">
-  <div class="header">Sensorer</div>
+  <div class="header">${t(this._hass, 'sensors')}</div>
 
   <!-- Vattentemperatur -->
   <div class="row">
     <div class="icon-wrap ic-blue">🌡️</div>
-    <div class="name">Vattentemperatur</div>
+    <div class="name">${t(this._hass, 'water_temp')}</div>
     <div class="value v-blue" id="v-water-temp">--<span class="unit">°C</span></div>
   </div>
 
   <!-- Flöde -->
   <div class="row">
     <div class="icon-wrap ic-cyan">💧</div>
-    <div class="name">Vattenflöde</div>
+    <div class="name">${t(this._hass, 'water_flow')}</div>
     <div class="value" id="v-flow">--<span class="unit">L/h</span></div>
   </div>
 
   <!-- Pump effekt -->
   <div class="row">
     <div class="icon-wrap ic-yellow">⚡</div>
-    <div class="name">Pump effekt</div>
+    <div class="name">${t(this._hass, 'pump_power')}</div>
     <div class="value v-yellow" id="v-pump-watt">--<span class="unit">W</span></div>
   </div>
 
   <!-- Energi idag -->
   <div class="row">
     <div class="icon-wrap ic-orange">📊</div>
-    <div class="name">Energi idag</div>
+    <div class="name">${t(this._hass, 'energy_today')}</div>
     <div class="value v-orange" id="v-energy">--<span class="unit">kWh</span></div>
   </div>
 
   <!-- Värmepump -->
   <div class="row">
     <div class="icon-wrap ic-orange">🔥</div>
-    <div class="name">Värmepump</div>
+    <div class="name">${t(this._hass, 'heat_pump')}</div>
     <div class="value" id="v-hp">--</div>
   </div>
 
   <!-- COP (beräknad om möjligt) -->
   <div class="row" id="row-cop">
     <div class="icon-wrap ic-green">📈</div>
-    <div class="name">Värmepump COP</div>
+    <div class="name">${t(this._hass, 'heat_pump_cop')}</div>
     <div class="value" id="v-cop">--</div>
   </div>
 
   <!-- Cirkulation -->
   <div class="row">
     <div class="icon-wrap ic-purple">🔄</div>
-    <div class="name">Cirkulation / dygn</div>
-    <div class="value" id="v-circ">--<span class="unit">ggr</span></div>
+    <div class="name">${t(this._hass, 'circulation')}</div>
+    <div class="value" id="v-circ">--<span class="unit">${t(this._hass, 'unit_times')}</span></div>
   </div>
 
 </div>`;
@@ -1063,7 +1210,7 @@ class PoolSensorsCard extends HTMLElement {
     // pump-/rörspecifikationer det här kortet inte känner till.
     const flow = f(e.flow, 0);
     const flowColor = flow !== null && parseFloat(flow) === 0 ? 'v-red' : 'v-cyan';
-    this._setHTML('v-flow', flow ? `<span class="${flowColor}">${parseInt(flow).toLocaleString('sv-SE')}</span><span class="unit"> L/h</span>` : '--');
+    this._setHTML('v-flow', flow ? `<span class="${flowColor}">${parseInt(flow).toLocaleString(locale(h))}</span><span class="unit"> L/h</span>` : '--');
 
     // Pump watt
     const watt = f(e.pump_watt, 0);
@@ -1077,7 +1224,7 @@ class PoolSensorsCard extends HTMLElement {
     const hpState = s(e.hp_power);
     const hpOn = hpState === 'on';
     const dotClass = hpOn ? 'status-dot dot-on' : 'status-dot dot-off';
-    const hpText = hpOn ? 'Värmer' : 'Standby';
+    const hpText = hpOn ? t(h, 'heating') : t(h, 'standby');
     const hpColor = hpOn ? 'v-orange' : '';
     this._setHTML('v-hp',
       `<span class="${dotClass}"></span><span class="${hpColor}">${hpText}</span>`
@@ -1103,7 +1250,7 @@ class PoolSensorsCard extends HTMLElement {
       const circNum = parseFloat(circ);
       const color = circNum < 1.5 ? 'v-red' : circNum < 3 ? 'v-yellow' : 'v-green';
       this._setHTML('v-circ',
-        `<span class="${color}">${circ}</span><span class="unit"> ggr</span>`
+        `<span class="${color}">${circ}</span><span class="unit"> ${t(h, 'unit_times')}</span>`
       );
     }
   }
@@ -1124,13 +1271,13 @@ class PoolSensorsCardEditor extends HTMLElement {
   _render() {
     const e = (this._config && this._config.entities) || {};
     const fields = [
-      { key: 'water_temp',   label: '🌡️ Vattentemp inlopp' },
-      { key: 'flow',         label: '💧 Flöde (L/h)' },
-      { key: 'pump_watt',    label: '⚡ Pump effekt (W)' },
-      { key: 'energy_today', label: '📊 Energi idag (kWh)' },
-      { key: 'hp_power',     label: '🔥 Värmepump på/av' },
-      { key: 'cop',          label: '📈 COP-sensor (valfri)' },
-      { key: 'circulation',  label: '🔄 Cirkulation/dygn' },
+      { key: 'water_temp',   label: `🌡️ ${t(this._hass, 'ed_water_temp')}` },
+      { key: 'flow',         label: `💧 ${t(this._hass, 'ed_flow')}` },
+      { key: 'pump_watt',    label: `⚡ ${t(this._hass, 'ed_pump_watt')}` },
+      { key: 'energy_today', label: `📊 ${t(this._hass, 'ed_energy_today')}` },
+      { key: 'hp_power',     label: `🔥 ${t(this._hass, 'ed_hp_power')}` },
+      { key: 'cop',          label: `📈 ${t(this._hass, 'ed_cop')}` },
+      { key: 'circulation',  label: `🔄 ${t(this._hass, 'ed_circulation')}` },
     ];
     this.innerHTML = `
       <style>
@@ -1173,13 +1320,13 @@ window.customCards = window.customCards || [];
 window.customCards.push({
   type: 'pool-sensors-card',
   name: 'Pool Sensors Card',
-  description: 'Sensorlista i referensstil — ikon + namn + värde',
+  description: 'Sensor list in reference style — icon + name + value',
   preview: true,
 });
 
 /* ── HACS bundle registration ─────────────────────────────── */
 window.customCards = window.customCards || [];
 if (!window.customCards.find(c => c.type === 'pool-picture-card'))
-  window.customCards.push({ type:'pool-picture-card', name:'Pool Picture Card', description:'Bakgrundsbild med glassmorfism-chips och drag-to-position', preview:true });
+  window.customCards.push({ type:'pool-picture-card', name:'Pool Picture Card', description:'Background image with glassmorphism chips and drag-to-position', preview:true });
 if (!window.customCards.find(c => c.type === 'pool-sensors-card'))
-  window.customCards.push({ type:'pool-sensors-card', name:'Pool Sensors Card', description:'Sensorlista — ikon + namn + värde', preview:true });
+  window.customCards.push({ type:'pool-sensors-card', name:'Pool Sensors Card', description:'Sensor list — icon + name + value', preview:true });
