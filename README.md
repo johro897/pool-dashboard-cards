@@ -136,6 +136,17 @@ entities:
 
 ---
 
+## Troubleshooting
+
+| Problem | Solution |
+|---|---|
+| Card not found / blank card | Verify the resource is registered under **Settings → Dashboards → Resources** and hard-refresh the browser (`Ctrl/Cmd + Shift + R`) |
+| Background image doesn't show | Check the `image` path (e.g. `/local/pool_v2.png`) actually points to a file under `/config/www/` — the path in config is relative to `/local/`, not the filesystem root |
+| Dragged a chip to a new position, but it reset after reloading | Chip positions are saved via `config-changed`, which needs a storage-mode (UI-managed) dashboard to persist — on a YAML-mode dashboard, or if saving fails, positions fall back to `localStorage` and stay local to that browser |
+| COP row missing from `pool-sensors-card` | It's optional by design — only shown when `entities.cop` is configured |
+| Flow rate shows red even though the pump is running | Zero flow always shows red regardless of pump state — this is intentional, not a threshold bug |
+| Arrow keys don't move a chip | Edit mode (the ✏️ button) must be active first — arrow keys only reposition once you're in that mode, hold Shift for a bigger step |
+
 ## Changelog
 
 ### v1.4
